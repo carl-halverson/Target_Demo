@@ -143,3 +143,59 @@ Well I figured out how to make the json pretty by adding
 print json.dumps (Files, indent=4, sort_keys=True)
 
 It’s still not exactly like the case study but, at least you can get an idea of my thought process tackling this challenge and how I go about solving problems.  If I didn’t have a full time job right now I would spend some more time on this and figure it out for sure.
+
+# API_DEMO
+
+API Metro
+
+In a language of your choice, write a program which will tell you how long it is until the next bus on “BUS ROUTE” leaving from “BUS STOP NAME” going “DIRECTION” using the api defined at http://svc.metrotransit.org/ 
+
+“BUS ROUTE” will be a substring of the bus route name which is only in one bus route
+ “BUS STOP NAME” will be a substring of the bus stop name which is only in one bus stop on that route 
+
+“DIRECTION” will be “north” “east” “west” or “south” 
+
+Eg, if you wanted to know the next bus leaving from our Brooklyn Park campus to our downtown campus: 
+
+$ go run nextbus.go “Express - Target - Hwy 252 and 73rd Av P&R - Mpls” “Target North Campus Building F” “south” 2 Minutes 
+
+(note that that won’t return anything if the last bus for the day has already left) 
+
+Or if you wanted to take the light rail from downtown to the Mall of America or the Airport: 
+
+$ nextbus.py “METRO Blue Line” “Target Field Station Platform 1” “south” 8 Minutes 
+
+
+NOTES Begin:
+
+Once again I have never physically written an API call from scratch.  I use them often but someone else wrote them and provided documentation.  I simply modify them to work for me as I need.
+
+First I looked at the metro API website.  Looks fairly straight forward.  Next it’s time to google and see what’s out there on the subject.
+
+Nice.., they have a help site with operations listed http://svc.metrotransit.org/nextrip/help
+
+I do some simple curls against the APIs to see some return values.   Now how to get the information I want returned based off the acceptance criteria in the use case.
+
+My thought is to get a curl command to return the values before I worry about scripting this with arguments.
+
+Routes is the first argument.  That’s easy enough to find.  My route would be the 888 from big lake to Target Field.  I’ll start with that.  South is 1 and north is 4, I ran the GetStops to figure out the STOP codes.
+
+GetTimepointDepartures operation - http://svc.metrotransit.org/NexTrip/{ROUTE}/{DIRECTION}/{STOP}
+
+curl get http://svc.metrotransit.org/NexTrip/Stops/{888}/{1} 
+Timepoint Stop Target = BAPK
+Timepoint Stop Big Lake Station = BLST
+
+curl get http://svc.metrotransit.org/NexTrip/{888}/{4}/{BAPK}
+XML returns all the departures
+
+My script would have three tables one for route # to Name, STOPcode to Name and Direction number to name.
+When the script was called it would convert the text to the correct string to populate the curl command
+
+The XML would only pull the “next departure time” with grep
+
+I could then pipe the grep results into a arithmetic equation that would pull the current time of day from the “date” command then have the arithmetic to output the wait time till the next departure from the returned XML.
+
+If null was returned it would echo “no more departures today”
+
+I don’t have time to actually write this out today.  I hope at least I show some logic on how my first thoughts are to provide the functionality in the acceptance criteria.
